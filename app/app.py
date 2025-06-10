@@ -16,7 +16,7 @@ def index():
         cleaned_text = clean_text(text)  
         vector = vectorizer.transform([cleaned_text])
         pred = model.predict(vector)[0]
-        prediction = "Fake News" if pred == 1 else "Real News"
+        prediction = "Fake News" if pred == 0 else "Real News"
     return render_template("index.html", prediction=prediction)
 
 if __name__ == "__main__":

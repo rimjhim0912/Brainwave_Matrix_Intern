@@ -1,7 +1,21 @@
- __pycache__/
-*.pyc
+# Python
+__pycache__/
+*.py[cod]
+*.pkl
+*.joblib
+
+# Jupyter
+.ipynb_checkpoints
+
+# VSCode
+.vscode/
+
+# Environments
 .env
 .venv/
-data/processed/
+
+# OS
+.DS_Store
+Thumbs.db
 
 

@@ -11,9 +11,13 @@ os.makedirs('models', exist_ok=True)
 # Load and label data
 fake = pd.read_csv('data/raw/Fake.csv')
 real = pd.read_csv('data/raw/True.csv')
-fake['label'] = 1
-real['label'] = 0
+fake['label'] = 0
+real['label'] = 1
 df = pd.concat([fake, real])
+
+print("Fake news samples:", len(fake))
+print("Real news samples:", len(real))
+
 
 # Preprocess
 df['text'] = df['text'].apply(clean_text)
