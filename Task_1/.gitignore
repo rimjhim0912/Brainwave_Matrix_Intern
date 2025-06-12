@@ -1,7 +1,6 @@
 # Python
 __pycache__/
 *.py[cod]
-*.pkl
 *.joblib
 
 # Jupyter
@@ -18,4 +17,6 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
+!models/logistic_model.pkl
+!models/vectorizer.pkl
 
