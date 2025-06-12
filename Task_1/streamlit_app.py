@@ -34,4 +34,3 @@ if st.button("Predict"):
         prediction = model.predict(vectorized)[0]
         label = "🟩 Real News" if prediction == 1 else "🟥 Fake News"
         st.success(f"Prediction: **{label}**")
-st.write("Files in models directory:", os.listdir("models"))
