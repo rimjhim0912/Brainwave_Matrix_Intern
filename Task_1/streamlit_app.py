@@ -11,8 +11,8 @@ model_path = "models/logistic_model.pkl"
 vectorizer_path = "models/vectorizer.pkl"
 
 try:
-    model = joblib.load(model_path)
-    vectorizer = joblib.load(vectorizer_path)
+    model = joblib.load(os.path.join("Task_1", "models", "logistic_model.pkl"))
+    vectorizer = joblib.load(os.path.join("Task_1", "models", "vectorizer.pkl"))
 except FileNotFoundError:
     st.error("Model files not found. Make sure 'logistic_model.pkl' and 'vectorizer.pkl' exist in the 'models' folder.")
     st.stop()
