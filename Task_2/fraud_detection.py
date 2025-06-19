@@ -31,7 +31,12 @@ model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
+# Clean both y_test and y_pred to remove extra quotes and convert to int
+y_test = y_test.astype(str).str.strip("'").astype(int)
+y_pred = pd.Series(y_pred).astype(str).str.strip("'").astype(int)
+
 print("ROC-AUC Score:", roc_auc_score(y_test, y_pred))
+
 
 # Save model
 joblib.dump(model, "fraud_model.pkl")
