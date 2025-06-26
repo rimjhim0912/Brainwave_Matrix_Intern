@@ -4,7 +4,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import classification_report, confusion_matrix
 from imblearn.over_sampling import RandomOverSampler
-from sklearn.preprocessing import StandardScaler
 
 # Load dataset
 df = pd.read_csv("creditcard.csv")
@@ -13,13 +12,9 @@ df = pd.read_csv("creditcard.csv")
 X = df.drop("Class", axis=1)
 y = df["Class"]
 
-# Scale features
-scaler = StandardScaler()
-X_scaled = scaler.fit_transform(X)
-
 # Oversample minority class
 ros = RandomOverSampler(random_state=42)
-X_resampled, y_resampled = ros.fit_resample(X_scaled, y)
+X_resampled, y_resampled = ros.fit_resample(X, y)
 
 # Split the balanced dataset
 X_train, X_test, y_train, y_test = train_test_split(
@@ -30,14 +25,11 @@ X_train, X_test, y_train, y_test = train_test_split(
 model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# Predict and evaluate
+# Evaluate
 y_pred = model.predict(X_test)
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
-# Save model and scaler
+# Save the trained model
 with open("fraud_model.pkl", "wb") as f:
     pickle.dump(model, f)
-
-with open("scaler.pkl", "wb") as f:
-    pickle.dump(scaler, f)

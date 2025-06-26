@@ -1,52 +1,37 @@
-import streamlit as st
+# fraud_detection.py
+
 import pandas as pd
 import pickle
-from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+from imblearn.over_sampling import RandomOverSampler
 
-@st.cache_resource
-def load_model():
-    with open("fraud_model.pkl", "rb") as f:
-        return pickle.load(f)
+# Load dataset
+df = pd.read_csv("creditcard.csv")
 
-# Load model
-model = load_model()
+# Separate features and target
+X = df.drop("Class", axis=1)
+y = df["Class"]
 
-st.title("💳 Credit Card Fraud Detection")
-st.write("📄 Upload a CSV file of transactions to detect fraud.")
+# Oversample minority class
+ros = RandomOverSampler(random_state=42)
+X_resampled, y_resampled = ros.fit_resample(X, y)
 
-# Upload CSV
-uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
+# Split the balanced dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X_resampled, y_resampled, test_size=0.3, random_state=42
+)
 
-if uploaded_file is not None:
-    try:
-        # Load data
-        df = pd.read_csv(uploaded_file)
+# Train model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
 
-        # Optional: Drop 'Class' column if present (label)
-        if "Class" in df.columns:
-            df = df.drop(columns=["Class"])
+# Predict and evaluate
+y_pred = model.predict(X_test)
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("\nClassification Report:\n", classification_report(y_test, y_pred))
 
-        # Normalize 'Amount' if model expected that
-        if "Amount" in df.columns:
-            scaler = StandardScaler()
-            df["Amount"] = scaler.fit_transform(df[["Amount"]])
-
-        # ❗ Keep 'Time' column because model was trained with it
-
-        # Predict
-        predictions = model.predict(df)
-
-        # Results
-        df["Prediction"] = predictions
-        df["Fraud_Status"] = df["Prediction"].apply(lambda x: "Fraud" if x == 1 else "Not Fraud")
-
-        # Show top rows
-        st.subheader("🔍 Prediction Results (Top 10 Rows):")
-        st.write(df.head(10))
-
-        # Download
-        csv = df.to_csv(index=False).encode("utf-8")
-        st.download_button("📥 Download Results", csv, "fraud_predictions.csv", "text/csv")
-
-    except Exception as e:
-        st.error(f"❌ Something went wrong: {e}")
+# Save model
+with open("fraud_model.pkl", "wb") as f:
+    pickle.dump(model, f)
