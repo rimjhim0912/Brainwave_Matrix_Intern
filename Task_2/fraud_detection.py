@@ -1,43 +1,43 @@
-# fraud_detection.py
-
 import pandas as pd
+import pickle
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+from imblearn.over_sampling import RandomOverSampler
 from sklearn.preprocessing import StandardScaler
-from imblearn.over_sampling import SMOTE
-import joblib
 
 # Load dataset
 df = pd.read_csv("creditcard.csv")
 
-# Preprocess
-df["NormalizedAmount"] = StandardScaler().fit_transform(df[["Amount"]])
-df = df.drop(["Time", "Amount"], axis=1)
+# Separate features and target
 X = df.drop("Class", axis=1)
 y = df["Class"]
 
-# Handle imbalance
-X_res, y_res = SMOTE(random_state=42).fit_resample(X, y)
+# Scale features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
 
-# Train-test split
-X_train, X_test, y_train, y_test = train_test_split(X_res, y_res, test_size=0.2, random_state=42)
+# Oversample minority class
+ros = RandomOverSampler(random_state=42)
+X_resampled, y_resampled = ros.fit_resample(X_scaled, y)
+
+# Split the balanced dataset
+X_train, X_test, y_train, y_test = train_test_split(
+    X_resampled, y_resampled, test_size=0.3, random_state=42
+)
 
 # Train model
-model = LogisticRegression(max_iter=1000)
+model = RandomForestClassifier(n_estimators=100, random_state=42)
 model.fit(X_train, y_train)
 
-# Evaluate
+# Predict and evaluate
 y_pred = model.predict(X_test)
 print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
 print("\nClassification Report:\n", classification_report(y_test, y_pred))
-# Clean both y_test and y_pred to remove extra quotes and convert to int
-y_test = y_test.astype(str).str.strip("'").astype(int)
-y_pred = pd.Series(y_pred).astype(str).str.strip("'").astype(int)
 
-print("ROC-AUC Score:", roc_auc_score(y_test, y_pred))
+# Save model and scaler
+with open("fraud_model.pkl", "wb") as f:
+    pickle.dump(model, f)
 
-
-# Save model
-joblib.dump(model, "fraud_model.pkl")
-
+with open("scaler.pkl", "wb") as f:
+    pickle.dump(scaler, f)
