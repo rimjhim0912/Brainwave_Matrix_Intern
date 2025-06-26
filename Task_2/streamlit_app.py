@@ -22,9 +22,9 @@ if uploaded_file is not None:
         if "Class" in df.columns:
             df = df.drop(columns=["Class"])
 
-        # Drop Time if your model was trained without it
-        if "Time" in df.columns:
-            df = df.drop(columns=["Time"])
+        # ✅ Do NOT drop 'Time' if your model used it
+        # if "Time" in df.columns:
+        #     df = df.drop(columns=["Time"])
 
         # Predict
         preds = model.predict(df)
