@@ -1,37 +1,53 @@
-# fraud_detection.py
-
+import streamlit as st
 import pandas as pd
 import pickle
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, confusion_matrix
-from imblearn.over_sampling import RandomOverSampler
 
-# Load dataset
-df = pd.read_csv("creditcard.csv")
+@st.cache_resource
+def load_model():
+    with open("fraud_model.pkl", "rb") as f:
+        return pickle.load(f)
 
-# Separate features and target
-X = df.drop("Class", axis=1)
-y = df["Class"]
+# Load model
+model = load_model()
 
-# Oversample minority class
-ros = RandomOverSampler(random_state=42)
-X_resampled, y_resampled = ros.fit_resample(X, y)
+# Title and instructions
+st.title("💳 Credit Card Fraud Detection")
+st.write("📄 Upload a CSV file of transactions to detect fraudulent activities.")
 
-# Split the balanced dataset
-X_train, X_test, y_train, y_test = train_test_split(
-    X_resampled, y_resampled, test_size=0.3, random_state=42
-)
+# Upload CSV file
+uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
 
-# Train model
-model = RandomForestClassifier(n_estimators=100, random_state=42)
-model.fit(X_train, y_train)
+# Process uploaded file
+if uploaded_file is not None:
+    try:
+        # Read uploaded data
+        df = pd.read_csv(uploaded_file)
 
-# Predict and evaluate
-y_pred = model.predict(X_test)
-print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
-print("\nClassification Report:\n", classification_report(y_test, y_pred))
+        # Remove 'Class' column if it exists
+        if 'Class' in df.columns:
+            df = df.drop(columns=['Class'])
 
-# Save model
-with open("fraud_model.pkl", "wb") as f:
-    pickle.dump(model, f)
+        # Ensure required columns are present
+        required_features = model.feature_names_in_
+        missing_features = [col for col in required_features if col not in df.columns]
+
+        if missing_features:
+            st.error(f"❌ Missing required columns: {missing_features}")
+        else:
+            # Make predictions
+            preds = model.predict(df)
+
+            # Attach predictions to dataframe
+            df["Prediction"] = preds
+            df["Fraud_Status"] = df["Prediction"].apply(lambda x: "Fraud" if x == 1 else "Not Fraud")
+
+            # Show top 10 results
+            st.subheader("🔍 Prediction Results (First 10 rows):")
+            st.write(df.head(10))
+
+            # Download option
+            csv = df.to_csv(index=False).encode("utf-8")
+            st.download_button("📥 Download Full Results", data=csv, file_name="fraud_predictions.csv", mime="text/csv")
+
+    except Exception as e:
+        st.error(f"❌ Something went wrong: {e}")

@@ -7,6 +7,7 @@ from imblearn.over_sampling import RandomOverSampler
 
 # Load dataset
 df = pd.read_csv("creditcard.csv")
+df["Class"] = df["Class"].astype(int)
 
 # Separate features and target
 X = df.drop("Class", axis=1)
