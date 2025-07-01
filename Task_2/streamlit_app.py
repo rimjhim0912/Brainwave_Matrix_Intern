@@ -24,13 +24,14 @@ if uploaded_file is not None:
         # Read uploaded data
         df = pd.read_csv(uploaded_file)
 
-        # Keep Class column if available
-        true_labels = None
+        # Extract true labels if present
         if 'Class' in df.columns:
             true_labels = df['Class'].astype(str).str.replace("'", "").str.strip().astype(int)
             df = df.drop(columns=['Class'])
+        else:
+            true_labels = None
 
-        # Ensure required columns are present
+        # Check for required features
         required_features = model.feature_names_in_
         missing_features = [col for col in required_features if col not in df.columns]
 
@@ -39,28 +40,19 @@ if uploaded_file is not None:
         else:
             # Make predictions
             preds = model.predict(df)
-            preds = preds.astype(int)
-
-            # Attach predictions to dataframe
             df["Prediction"] = preds
             df["Fraud_Status"] = df["Prediction"].apply(lambda x: "Fraud" if x == 1 else "Not Fraud")
-
-            # Compare with true labels if present
-            if true_labels is not None:
-                df["Actual"] = true_labels
-                df["Actual_Status"] = df["Actual"].apply(lambda x: "Fraud" if x == 1 else "Not Fraud")
-                df["Correct"] = df["Actual"] == df["Prediction"]
-
-                # Classification report
-                st.subheader("📊 Classification Report")
-                report = classification_report(true_labels, preds, target_names=["Not Fraud", "Fraud"])
-                st.text(report)
 
             # Show top 10 results
             st.subheader("🔍 Prediction Results (First 10 rows):")
             st.write(df.head(10))
 
-            # Download option
+            # Optional: show evaluation metrics
+            if true_labels is not None:
+                st.subheader("📊 Evaluation Metrics:")
+                st.text(classification_report(true_labels, preds))
+
+            # Download results
             csv = df.to_csv(index=False).encode("utf-8")
             st.download_button("📥 Download Full Results", data=csv, file_name="fraud_predictions.csv", mime="text/csv")
 
