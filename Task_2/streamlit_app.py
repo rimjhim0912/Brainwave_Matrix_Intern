@@ -27,7 +27,7 @@ if uploaded_file is not None:
         # Keep Class column if available
         true_labels = None
         if 'Class' in df.columns:
-            true_labels = df['Class'].astype(str).str.strip("'").astype(int)
+            true_labels = df['Class'].astype(str).str.replace("'", "").astype(int)
             df = df.drop(columns=['Class'])
 
         # Ensure required columns are present
