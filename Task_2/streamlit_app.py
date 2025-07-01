@@ -40,6 +40,7 @@ if uploaded_file is not None:
         else:
             # Make predictions
             preds = model.predict(df)
+            preds = pd.Series(preds).astype(str).str.replace("'", "").str.strip().astype(int)
             df["Prediction"] = preds
             df["Fraud_Status"] = df["Prediction"].apply(lambda x: "Fraud" if x == 1 else "Not Fraud")
 
